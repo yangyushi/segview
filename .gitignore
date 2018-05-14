@@ -1,0 +1,7 @@
+__pycache__
+segview.egg-info
+build
+dist
+*.pyc
+.*
+!.gitignore
