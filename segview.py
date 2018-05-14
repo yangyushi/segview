@@ -17,7 +17,7 @@ def index2position(image, metadata):
     return positions.T
 
 
-def render_image(image, metadata, feature=None):
+def render_image(image, metadata, feature=None, alpha=1, feature_size=4):
     pg.mkQApp()
     view = gl.GLViewWidget()
     view.show()
@@ -26,17 +26,17 @@ def render_image(image, metadata, feature=None):
                                     image_positions.T[1].flatten().max() / 2,
                                     image_positions.T[2].flatten().max() / 2)  # rotation centre of the camera
     view.opts['distance'] = image_positions.flatten().max() * 2  # distance of the camera respect to the center
-    image_color = np.zeros([len(image_positions), 4]) + np.array([0.1, 0.1, 1, 0.01])
+    image_color = np.zeros([len(image_positions), 4]) + np.array([0.1, 0.1, 1, alpha])
     point_image = gl.GLScatterPlotItem(pos=image_positions, color=image_color, pxMode=False)
     view.addItem(point_image)
-    if isinstance(feature, type(None)):
+    if not isinstance(feature, type(None)):
         feature = feature.T
         feature = np.array([feature[0] * metadata['voxel_size_x'],
                             feature[1] * metadata['voxel_size_y'],
                             feature[2] * metadata['voxel_size_z']])
-        feature_size = np.ones(feature.shape[1]) * 4
+        feature_size = np.ones(feature.shape[1]) * feature_size
         feature_color = np.zeros([feature.shape[1], 1]) + np.array([1, 0, 0, 1])
-        point_feature = gl.GLScatterPlotItem(pos=feature.T, color=feature_color, size=feature_size, pxMode=False)
+        point_feature = gl.GLScatterPlotItem(pos=feature.T, color=feature_color, size=feature_size)
         view.addItem(point_feature)
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
@@ -72,7 +72,7 @@ def refresh_image(canvas, new_image, z):
     canvas.setImage(new_image[z])
 
 
-def annotate_maxima(image, feature):
+def annotate_feature(image, feature, feature_size=4):
     image = np.moveaxis(image, -1, 0)  # x,y,z ---> z,x,y
     pg.mkQApp()
     window = pg.GraphicsLayoutWidget()
@@ -80,19 +80,21 @@ def annotate_maxima(image, feature):
     p1.setPreferredHeight(1)
     p2 = window.addPlot(row=4, col=0, rowspane=1)
     p2.setXRange(0, len(image))
-    vline = pg.LineSegmentROI([[1, 0], [1, 10]], pen='r')  # vertical line
-    p2.addItem(vline)
+    p2.getViewBox().setMouseEnabled(0, 0)  # disable resize using mouse
+    vline = pg.InfiniteLine(angle=90, movable=True, pen=pg.mkPen(cosmetic=False, width=0.1, color='y'))  # vertical line
+    vline.setBounds([1, image.shape[0]])
     axis = pg.ScatterPlotItem()
     canvas = pg.ImageItem()
     region = pg.LinearRegionItem()
     region.setRegion([0, 2])
     p2.addItem(region)
+    p2.addItem(vline)
     feature = feature.T
 
     def vline_update():
         z = int(vline.pos()[0])
         z = (z > 0) * z
-        z = (z < len(image)) * z + (z >= len(image) * len(image) - 1)
+        z = (z < len(image)) * z + ((z >= len(image)) * (len(image) - 1))
         refresh_image(canvas, image, z)
         lower, upper = region.getRegion()
         rw = upper - lower  # region_width
@@ -105,10 +107,11 @@ def annotate_maxima(image, feature):
         refresh_scatter(axis, feature, upper, lower,
                         size=10, brush=pg.mkBrush(color=(255, 0, 0, 255)))
 
-    refresh_scatter(axis, feature, 0, 1, size=10, brush=pg.mkBrush(color=(255, 0, 0, 255)))
+    refresh_scatter(axis, feature, 0, 1, size=feature_size, brush=pg.mkBrush(color=(255, 0, 0, 255)))
     refresh_image(canvas, image, 1)
 
-    vline.sigRegionChanged.connect(vline_update)
+    vline.sigPositionChanged.connect(vline_update)
+    vline.sigPositionChangeFinished.connect(vline_update)
     region.sigRegionChanged.connect(region_update)
     p1.addItem(axis)
     p1.addItem(canvas)
@@ -119,7 +122,7 @@ def annotate_maxima(image, feature):
         QtGui.QApplication.instance().exec_()
 
 
-def refresh_labels(plot, canvas, labels, z, show_com=False):
+def refresh_label(plot, canvas, labels, z, show_com=False):
     """
     :param plot: a pyqtgraph.PlotItem instance
     :param canvas: a ImageItem instance, belonging to `plot`
@@ -151,7 +154,7 @@ def refresh_labels(plot, canvas, labels, z, show_com=False):
         plot.addItem(text)
 
 
-def annotate_labels(image, labels):
+def annotate_label(image, labels):
     image = np.moveaxis(image, -1, 0)  # x,y,z ---> z,x,y
     labels = np.moveaxis(labels, -1, 0)  # x,y,z ---> z,x,y
     # create canvas
@@ -160,8 +163,9 @@ def annotate_labels(image, labels):
     p1 = window.addPlot(row=1, col=0, rowspan=3)
     p1.setPreferredHeight(1)
     p2 = window.addPlot(row=4, col=0, rowspane=1)
+    p2.getViewBox().setMouseEnabled(0, 0)  # disable resize using mouse
     p2.setXRange(0, len(image))
-    vline = pg.InfiniteLine(angle=90, movable=True)  # vertical line
+    vline = pg.InfiniteLine(angle=90, movable=True, pen=pg.mkPen(cosmetic=False, width=0.1, color='y'))  # vertical line
     vline.setBounds([0, image.shape[0]])
     p2.addItem(vline)
     canvas_image = pg.ImageItem()
@@ -173,12 +177,11 @@ def annotate_labels(image, labels):
         z = (z > 0) * z
         z = (z < z_max) * z + ((z >= z_max) * (z_max - 1))
         refresh_image(canvas_image, image, z)
-        refresh_labels(p1, canvas_label, labels, z)
+        refresh_label(p1, canvas_label, labels, z)
 
     refresh_image(canvas_image, image, 1)
-    refresh_labels(p1, canvas_label, labels, 1)
+    refresh_label(p1, canvas_label, labels, 1)
     vline.sigPositionChanged.connect(vline_update)
-    vline.sigPositionChangeFinished.connect(lambda: p1.replot())
     p1.addItem(canvas_image)
     p1.addItem(canvas_label)
     window.resize(640, 640)

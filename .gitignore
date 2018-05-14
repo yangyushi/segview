@@ -1,6 +1,7 @@
 __pycache__
 segview.egg-info
 build
+build.sh
 dist
 *.pyc
 .*
