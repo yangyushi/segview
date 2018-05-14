@@ -3,6 +3,8 @@ segview.egg-info
 build
 build.sh
 dist
+MANIFEST.in
+setup.py
 *.pyc
 .*
 !.gitignore
