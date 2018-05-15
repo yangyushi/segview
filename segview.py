@@ -195,18 +195,19 @@ def label_to_2d_image(labels, z='sum', alpha=0.5):
     :param labels: (x, y, z), values are label values
     :return: (x, y, rgba)
     """
+
     if z == 'sum':
         labels_2d = labels.max(-1)
     else:
         labels_2d = labels[z, :, :]
-    rgba = cm.tab10(labels_2d)
+    rgba = cm.tab10((labels_2d % 10 + 1) * (labels_2d > 0))
     rgba[:, :, -1] = alpha
     rgba[np.where(labels_2d == 0)] = np.zeros(4)
     return rgba
 
 
 def label_to_rgba(labels, alpha=None):
-    rgba = cm.tab10(labels)
+    rgba = cm.tab10((labels % 10 + 1) * (labels > 0))
     if alpha:
         rgba[:, :, :, -1] = alpha
     rgba = rgba[np.where(labels > 0)]
