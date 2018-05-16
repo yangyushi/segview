@@ -33,7 +33,7 @@ see the 2D distribution of features and the origional image
 drag the yellow line to change z-slice index
 expand/shrink the blue region to include/exclude features in other z-stacks
 """
-segview.render_labels(label, metadata, alpha=1)
+segview.annotate_feature(image, label)
 ```
 
 - `label` is a 3D `numpy` array
