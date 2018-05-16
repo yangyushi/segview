@@ -42,7 +42,7 @@ def render_image(image, metadata, feature=None, alpha=1, feature_size=4):
         QtGui.QApplication.instance().exec_()
 
 
-def render_labels(labels, metadata, alpha=0.01):
+def render_label(labels, metadata, alpha=0.01):
     """
     labels.shape: (x_size, y_size, z_size)
     """
