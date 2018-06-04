@@ -12,28 +12,15 @@ visualise the 3D segmentation result
 ## Use SegView
 
 ```python
-"""
-see the 3D model of labels
-"""
-segview.render_label(label, metadata, alpha=1)
+segview.render_label(label, metadata, alpha=1) # see the 3D model of labels
 
-"""
-see the 2D slice of labels and the origional images
-drag the yellow line to change z-slice index
-"""
-segview.annotate_label(image, label)
+segview.annotate_label(image, label)  # see the 2D slice with labels
 
-"""
-see the 3D distribution of features
-"""
-segview.render_labels(label, metadata, alpha=1)
+segview.render_image(image, metadata)  # see the 3D render of an image
 
-"""
-see the 2D distribution of features and the origional image
-drag the yellow line to change z-slice index
-expand/shrink the blue region to include/exclude features in other z-stacks
-"""
-segview.annotate_feature(image, label)
+segview.render_image(image, metadata, feature)  # see the 3D image with features
+
+segview.annotate_feature(image, label)  # see 2D slice with features
 ```
 
 - `label` is a 3D `numpy` array
