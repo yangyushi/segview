@@ -17,10 +17,12 @@ def index2position(image, metadata):
     return positions.T
 
 
-def render_image(image, metadata, feature=None, alpha=1, feature_size=4):
+def render_image(image, metadata=None, feature=None, alpha=1, feature_size=4):
     pg.mkQApp()
     view = gl.GLViewWidget()
     view.show()
+    if isinstance(metadata, type(None)):
+        metadata = {'voxel_size_x': 1, 'voxel_size_y': 1, 'voxel_size_z': 1}
     image_positions = index2position(image, metadata)
     view.opts['center'] = QVector3D(image_positions.T[0].flatten().max() / 2,
                                     image_positions.T[1].flatten().max() / 2,
@@ -42,10 +44,14 @@ def render_image(image, metadata, feature=None, alpha=1, feature_size=4):
         QtGui.QApplication.instance().exec_()
 
 
-def render_label(labels, metadata, alpha=0.01):
+def render_label(labels, metadata=None, alpha=0.01):
     """
     labels.shape: (x_size, y_size, z_size)
     """
+
+    if isinstance(metadata, type(None)):
+        metadata = {'voxel_size_x': 1, 'voxel_size_y': 1, 'voxel_size_z': 1}
+
     pg.mkQApp()
     view = gl.GLViewWidget()
     view.show()
