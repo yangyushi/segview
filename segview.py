@@ -67,9 +67,11 @@ def render_label(labels, metadata=None, alpha=0.01):
         QtGui.QApplication.instance().exec_()
 
 
-def refresh_scatter(plot, feature, upper, lower, **kargs):
+def refresh_scatter(plot, feature, axis, upper, lower, **kargs):
     plot.clear()
-    scatter = [(p[0], p[1]) for p in feature.T if (p[2] < upper and p[2] > lower)]
+    ai = [0, 1, 2]  # axis indices
+    ai.insert(0, ai.pop(axis))
+    scatter = [(p[ai[1]], p[ai[2]]) for p in feature.T if (p[ai[0]] < upper and p[ai[0]] > lower)]
     plot.setData(pos=scatter, **kargs)
 
 
@@ -78,8 +80,8 @@ def refresh_image(canvas, new_image, z):
     canvas.setImage(new_image[z])
 
 
-def annotate_feature(image, feature, feature_size=4):
-    image = np.moveaxis(image, -1, 0)  # x,y,z ---> z,x,y
+def annotate_feature(image, feature, axis=-1, feature_size=4):
+    image = np.moveaxis(image, axis, 0)  # (x,y,z) ---> (z,x,y) or (y, x, z)
     pg.mkQApp()
     window = pg.GraphicsLayoutWidget()
     p1 = window.addPlot(row=1, col=0, rowspan=3)
@@ -89,7 +91,7 @@ def annotate_feature(image, feature, feature_size=4):
     p2.getViewBox().setMouseEnabled(0, 0)  # disable resize using mouse
     vline = pg.InfiniteLine(angle=90, movable=True, pen=pg.mkPen(cosmetic=False, width=0.1, color='y'))  # vertical line
     vline.setBounds([1, image.shape[0]])
-    axis = pg.ScatterPlotItem()
+    plot = pg.ScatterPlotItem()
     canvas = pg.ImageItem()
     region = pg.LinearRegionItem()
     region.setRegion([0, 2])
@@ -110,16 +112,16 @@ def annotate_feature(image, feature, feature_size=4):
         lower, upper = region.getRegion()
         lower = int(lower)
         upper = int(upper)
-        refresh_scatter(axis, feature, upper, lower,
+        refresh_scatter(plot, feature, axis, upper, lower,
                         size=10, brush=pg.mkBrush(color=(255, 0, 0, 255)))
 
-    refresh_scatter(axis, feature, 0, 1, size=feature_size, brush=pg.mkBrush(color=(255, 0, 0, 255)))
+    refresh_scatter(plot, feature, axis, 0, 1, size=feature_size, brush=pg.mkBrush(color=(255, 0, 0, 255)))
     refresh_image(canvas, image, 1)
 
     vline.sigPositionChanged.connect(vline_update)
     vline.sigPositionChangeFinished.connect(vline_update)
     region.sigRegionChanged.connect(region_update)
-    p1.addItem(axis)
+    p1.addItem(plot)
     p1.addItem(canvas)
     canvas.setZValue(-100)
     window.resize(800, 800)

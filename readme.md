@@ -14,7 +14,7 @@ visualise the 3D segmentation result
 ```python
 segview.render_label(label, metadata, alpha=1) # see the 3D model of labels
 
-segview.annotate_label(image, label)  # see the 2D slice with labels
+segview.annotate_label(image, label, axis=-1)  # see the 2D slice with labels along different axes
 
 segview.render_image(image, metadata)  # see the 3D render of an image
 
