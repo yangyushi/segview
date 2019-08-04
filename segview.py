@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import numpy as np
+from PySide2.QtGui import QVector3D
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from PyQt5.QtGui import QVector3D
 from pyqtgraph.Qt import QtCore, QtGui
 from matplotlib import cm
 
