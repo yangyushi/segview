@@ -4,10 +4,8 @@ visualise the 3D segmentation result
 
 ## Install
 
-- The most convenient way would be: `pip3 install segview`
+- The most convenient way would be: `pip install segview`
 - You can also Include the file `segview.py` in your project directory
-
-(SegView only support Python 3.5+, because it requires `PyQt5`)
 
 ## Use SegView
 
@@ -20,7 +18,7 @@ segview.render_image(image, metadata)  # see the 3D render of an image
 
 segview.render_image(image, metadata, feature)  # see the 3D image with features
 
-segview.annotate_feature(image, label)  # see 2D slice with features
+segview.annotate_feature(image, feature)  # see 2D slice with features
 ```
 
 - `label` is a 3D `numpy` array
